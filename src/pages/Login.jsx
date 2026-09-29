@@ -18,7 +18,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError('Failed to sign in. Please check your credentials.');
+      setError('Failed to sign in. Please check your email and password.');
     } finally {
       setLoading(false);
     }
@@ -30,79 +30,77 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-red-500">MatCraft</h1>
-          <p className="text-gray-400 mt-2">Session planning for combat sports coaches</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            MatFlow
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">Sign in to manage your session plans</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 text-red-200 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email address</label>
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+              Email address
+            </label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
               placeholder="coach@gym.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                Password
+              </label>
+              <Link to="/forgot-password" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
               placeholder="••••••••"
             />
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <Link to="/forgot-password" className="text-red-400 hover:text-red-300">
-              Forgot password?
-            </Link>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-red-600 hover:bg-red-700 font-semibold rounded-lg text-white transition duration-200 disabled:opacity-50"
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 font-medium rounded-xl text-white transition shadow-sm disabled:opacity-50 text-sm mt-2"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-800 text-gray-400">Or</span>
-          </div>
+        <div className="mt-4">
+          <button
+            onClick={handleGuestLogin}
+            type="button"
+            className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition text-sm border border-slate-200"
+          >
+            Continue as Guest Demo
+          </button>
         </div>
 
-        <button
-          onClick={handleGuestLogin}
-          type="button"
-          className="w-full py-3 bg-gray-700 hover:bg-gray-600 font-semibold rounded-lg text-gray-200 transition duration-200 mb-6"
-        >
-          Try demo mode
-        </button>
-
-        <p className="text-center text-sm text-gray-400">
+        <p className="text-center text-sm text-slate-500 mt-6">
           Need an account?{' '}
-          <Link to="/signup" className="text-red-400 hover:text-red-300 font-medium">
+          <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
             Sign up
           </Link>
         </p>
