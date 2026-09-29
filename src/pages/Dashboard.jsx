@@ -34,12 +34,11 @@ export default function Dashboard() {
   const [curriculums, setCurriculums] = useState([]);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isTechniqueModalOpen, setIsTechniqueModalOpen] = useState(false);
-  const [activeInsertionTarget, setActiveInsertionTarget] = useState(null); // { weekIdx, sessionIdx }
+  const [activeInsertionTarget, setActiveInsertionTarget] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [activeSessionForTimer, setActiveSessionForTimer] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch curriculums on load
   useEffect(() => {
     async function loadData() {
       try {
@@ -58,7 +57,6 @@ export default function Dashboard() {
     loadData();
   }, [currentUser]);
 
-  // Create new curriculum
   async function handleCreateCurriculum(planData) {
     try {
       const planId = await createCurriculum(currentUser?.uid || 'guest-user', planData);
@@ -70,7 +68,6 @@ export default function Dashboard() {
     }
   }
 
-  // Delete plan
   async function handleDeleteCurriculum(planId, e) {
     e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this curriculum?')) return;
@@ -87,7 +84,6 @@ export default function Dashboard() {
     }
   }
 
-  // Helper to persist plan modifications locally and to Firestore
   async function persistPlanUpdate(updatedPlan) {
     setSelectedPlan(updatedPlan);
     const updatedList = curriculums.map((c) => (c.id === updatedPlan.id ? updatedPlan : c));
@@ -98,7 +94,6 @@ export default function Dashboard() {
     });
   }
 
-  // Add blank phase
   function handleAddPhase(wIdx, sIdx) {
     if (!selectedPlan) return;
     const updatedPlan = JSON.parse(JSON.stringify(selectedPlan));
@@ -114,7 +109,6 @@ export default function Dashboard() {
     persistPlanUpdate(updatedPlan);
   }
 
-  // Reorder phase up or down
   function handleMovePhase(wIdx, sIdx, pIdx, direction) {
     if (!selectedPlan) return;
     const updatedPlan = JSON.parse(JSON.stringify(selectedPlan));
@@ -130,7 +124,6 @@ export default function Dashboard() {
     persistPlanUpdate(updatedPlan);
   }
 
-  // Delete single phase
   function handleDeletePhase(wIdx, sIdx, pIdx) {
     if (!selectedPlan) return;
     const updatedPlan = JSON.parse(JSON.stringify(selectedPlan));
@@ -139,7 +132,6 @@ export default function Dashboard() {
     persistPlanUpdate(updatedPlan);
   }
 
-  // Inject selected technique from bank modal
   function handleInjectTechnique(drill) {
     if (!selectedPlan || !activeInsertionTarget) return;
     const { wIdx, sIdx } = activeInsertionTarget;
@@ -168,24 +160,24 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-800 flex flex-col">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/80 sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-slate-50/50 text-slate-800 flex flex-col w-full overflow-x-hidden">
+      {/* Responsive Compact Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/80 sticky top-0 z-10 px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             MatFlow
           </h1>
-          <span className="text-xs px-2.5 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium border border-slate-200">
+          <span className="text-[10px] sm:text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium border border-slate-200">
             Phase 2
           </span>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 text-sm text-slate-600 bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200/60">
-            <User className="w-4 h-4 text-blue-600" />
-            <span className="font-medium">{currentUser?.email || 'Guest Coach'}</span>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5 text-xs text-slate-600 bg-slate-100/80 px-2.5 py-1.5 rounded-lg border border-slate-200/60 max-w-[150px] sm:max-w-none truncate">
+            <User className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="font-medium truncate">{currentUser?.email || 'Guest'}</span>
             {isGuest && (
-              <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium border border-amber-200">
+              <span className="hidden sm:inline-block text-[10px] bg-amber-100 text-amber-700 px-1 rounded font-medium border border-amber-200">
                 Demo
               </span>
             )}
@@ -193,38 +185,39 @@ export default function Dashboard() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition shadow-sm"
+            className="p-1.5 sm:px-3 sm:py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition shadow-xs"
+            title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign out</span>
+            <span className="hidden sm:inline-block ml-1">Sign out</span>
           </button>
         </div>
       </header>
 
       {/* Main Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
         {isGuest && (
-          <div className="p-4 bg-amber-50 border border-amber-200/80 rounded-xl flex items-start space-x-3 text-amber-900 text-sm shadow-sm">
-            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl flex items-start space-x-3 text-amber-900 text-xs sm:text-sm shadow-xs">
+            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-amber-900">Viewing as Demo Guest</p>
               <p className="mt-0.5 text-amber-700">
-                You can create curriculums, reorder phases, and print mat sheets. Sign up for a permanent account to sync across devices.
+                You can create curriculums, reorder phases, and launch mat timers.
               </p>
             </div>
           </div>
         )}
 
         {/* Action Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Curriculum Library</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Manage training blocks, print sheets, and launch mat timers</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Curriculum Library</h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Manage training blocks, print sheets, and launch mat timers</p>
           </div>
 
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-sm transition"
+            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-xs transition"
           >
             <Plus className="w-4 h-4" />
             <span>New Curriculum</span>
@@ -232,19 +225,19 @@ export default function Dashboard() {
         </div>
 
         {curriculums.length === 0 && !loading ? (
-          <div className="bg-white/60 border border-dashed border-slate-300 rounded-2xl p-16 text-center flex flex-col items-center justify-center space-y-4 shadow-sm">
-            <div className="p-4 bg-blue-50/80 rounded-full border border-blue-100">
-              <BookOpen className="w-8 h-8 text-blue-600" />
+          <div className="bg-white/60 border border-dashed border-slate-300 rounded-2xl p-8 sm:p-16 text-center flex flex-col items-center justify-center space-y-4 shadow-xs">
+            <div className="p-3.5 bg-blue-50/80 rounded-full border border-blue-100">
+              <BookOpen className="w-7 h-7 text-blue-600" />
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-semibold text-slate-800">No Curriculums Created</h3>
-              <p className="text-sm text-slate-500 max-w-sm">
+              <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
                 Get started by creating your first training block using the wizard.
               </p>
             </div>
             <button
               onClick={() => setIsWizardOpen(true)}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition shadow-sm"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl transition shadow-xs"
             >
               <Plus className="w-4 h-4" />
               <span>Create First Curriculum</span>
@@ -252,7 +245,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Sidebar List */}
+            {/* Sidebar Plans List */}
             <div className="space-y-3">
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-1">
                 Your Plans ({curriculums.length})
@@ -262,9 +255,9 @@ export default function Dashboard() {
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan)}
-                    className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+                    className={`p-3.5 rounded-xl border transition cursor-pointer flex items-center justify-between ${
                       selectedPlan?.id === plan.id
-                        ? 'bg-white border-blue-500 shadow-sm ring-1 ring-blue-500/20'
+                        ? 'bg-white border-blue-500 shadow-xs ring-1 ring-blue-500/20'
                         : 'bg-white/60 border-slate-200/80 hover:bg-white hover:border-slate-300'
                     }`}
                   >
@@ -291,29 +284,29 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Selected Plan Workspace */}
+            {/* Selected Plan Details */}
             {selectedPlan && (
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
-                  <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>
                       <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
                         {selectedPlan.sport}
                       </span>
-                      <h3 className="text-xl font-bold text-slate-900 mt-0.5">{selectedPlan.title}</h3>
-                      <p className="text-sm text-slate-500 mt-1">{selectedPlan.description}</p>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 mt-0.5">{selectedPlan.title}</h3>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">{selectedPlan.description}</p>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 self-start">
                       <button
                         onClick={() => printCurriculumSheet(selectedPlan)}
-                        className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition"
+                        className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition"
                         title="Print Clipboard Sheet"
                       >
                         <Printer className="w-3.5 h-3.5" />
-                        <span>Print Sheet</span>
+                        <span>Print</span>
                       </button>
-                      <span className="text-xs px-3 py-1 bg-blue-50 text-blue-700 font-semibold rounded-full border border-blue-100">
+                      <span className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 font-semibold rounded-full border border-blue-100">
                         {selectedPlan.level}
                       </span>
                     </div>
@@ -322,22 +315,22 @@ export default function Dashboard() {
                   {/* Weeks and Sessions Breakdown */}
                   <div className="space-y-4 pt-2">
                     {selectedPlan.weeks?.map((week, wIdx) => (
-                      <div key={wIdx} className="bg-slate-50/70 border border-slate-200/60 rounded-xl p-4 space-y-3">
+                      <div key={wIdx} className="bg-slate-50/70 border border-slate-200/60 rounded-xl p-3.5 sm:p-4 space-y-3">
                         <h4 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
                           <Layers className="w-4 h-4 text-blue-600" />
                           {week.title}
                         </h4>
 
                         {week.sessions?.map((session, sIdx) => (
-                          <div key={session.id || sIdx} className="bg-white border border-slate-200/80 rounded-lg p-4 space-y-3 shadow-xs">
-                            <div className="flex items-center justify-between">
+                          <div key={session.id || sIdx} className="bg-white border border-slate-200/80 rounded-lg p-3.5 sm:p-4 space-y-3 shadow-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
                                 {session.name}
                               </span>
 
                               <button
                                 onClick={() => setActiveSessionForTimer(session)}
-                                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-xs"
+                                className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition shadow-xs"
                               >
                                 <Play className="w-3.5 h-3.5 fill-current" />
                                 <span>Launch Mat Timer</span>
@@ -347,25 +340,24 @@ export default function Dashboard() {
                             {/* Phases List */}
                             <div className="space-y-2">
                               {session.phases?.map((phase, pIdx) => (
-                                <div key={phase.id || pIdx} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs border border-slate-200/50 group">
+                                <div key={phase.id || pIdx} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-xs border border-slate-200/50">
                                   <div className="min-w-0 pr-2">
                                     <span className="font-semibold text-slate-800">{phase.name}</span>
-                                    {phase.notes && <p className="text-slate-500 mt-0.5 truncate">{phase.notes}</p>}
+                                    {phase.notes && <p className="text-slate-500 mt-0.5 truncate text-[11px]">{phase.notes}</p>}
                                   </div>
 
-                                  <div className="flex items-center space-x-2 shrink-0">
-                                    <span className="flex items-center space-x-1 font-mono text-slate-600 font-medium bg-white px-2 py-1 rounded border border-slate-200">
+                                  <div className="flex items-center space-x-1.5 shrink-0">
+                                    <span className="flex items-center space-x-1 font-mono text-slate-600 font-medium bg-white px-2 py-0.5 rounded border border-slate-200 text-[11px]">
                                       <Clock className="w-3 h-3 text-slate-400" />
                                       <span>{phase.durationMinutes}m</span>
                                     </span>
 
                                     {/* Reorder Buttons */}
-                                    <div className="flex items-center space-x-0.5 opacity-80 group-hover:opacity-100 transition">
+                                    <div className="flex items-center space-x-0.5">
                                       <button
                                         onClick={() => handleMovePhase(wIdx, sIdx, pIdx, 'up')}
                                         disabled={pIdx === 0}
                                         className="p-1 hover:bg-slate-200 rounded disabled:opacity-30 text-slate-600 transition"
-                                        title="Move Up"
                                       >
                                         <ArrowUp className="w-3.5 h-3.5" />
                                       </button>
@@ -373,14 +365,12 @@ export default function Dashboard() {
                                         onClick={() => handleMovePhase(wIdx, sIdx, pIdx, 'down')}
                                         disabled={pIdx === session.phases.length - 1}
                                         className="p-1 hover:bg-slate-200 rounded disabled:opacity-30 text-slate-600 transition"
-                                        title="Move Down"
                                       >
                                         <ArrowDown className="w-3.5 h-3.5" />
                                       </button>
                                       <button
                                         onClick={() => handleDeletePhase(wIdx, sIdx, pIdx)}
                                         className="p-1 hover:bg-red-100 text-slate-400 hover:text-red-600 rounded transition"
-                                        title="Delete Phase"
                                       >
                                         <Trash2 className="w-3.5 h-3.5" />
                                       </button>
@@ -391,7 +381,7 @@ export default function Dashboard() {
                             </div>
 
                             {/* Phase Creation Bar */}
-                            <div className="flex items-center space-x-3 pt-1">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1">
                               <button
                                 onClick={() => handleAddPhase(wIdx, sIdx)}
                                 className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center space-x-1"
@@ -400,7 +390,7 @@ export default function Dashboard() {
                                 <span>Add Phase</span>
                               </button>
 
-                              <span className="text-slate-300">•</span>
+                              <span className="text-slate-300 hidden sm:inline">•</span>
 
                               <button
                                 onClick={() => {
