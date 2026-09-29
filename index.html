@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MatCraft — Grappling Curriculum & Session Planner</title>
+  <title>MatCraft UI Rendering Preview</title>
   
-  <!-- Modern Inter Font -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,16 +19,6 @@
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0284c7',
-              600: '#0369a1',
-              700: '#035483',
-              900: '#0c4a6e',
-            }
           }
         }
       }
@@ -40,998 +30,235 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase Modular SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword, 
-      signOut, 
-      onAuthStateChanged,
-      signInAnonymously
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      getDocs, 
-      setDoc, 
-      deleteDoc, 
-      onSnapshot,
-      query,
-      orderBy 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // Standard public Demo Config - replace with your Firebase Console credentials if desired
-    const firebaseConfig = {
-      apiKey: "AIzaSyDemoConfigForGrapplingPlannerKey",
-      authDomain: "bjj-planner-demo.firebaseapp.com",
-      projectId: "bjj-planner-demo",
-      storageBucket: "bjj-planner-demo.appspot.com",
-      messagingSenderId: "123456789012",
-      appId: "1:123456789012:web:abcdef123456"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    window.firebaseAuth = getAuth(app);
-    window.firebaseDb = getFirestore(app);
-    window.firebaseSDK = {
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      signInAnonymously,
-      collection,
-      doc,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      onSnapshot,
-      query,
-      orderBy
-    };
-  </script>
-
   <style>
     body { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
   </style>
 </head>
-<body class="h-full text-slate-900 bg-slate-50 antialiased selection:bg-slate-200">
-  <div id="root" class="h-full"></div>
+<body class="h-full text-slate-900 bg-slate-200 antialiased selection:bg-slate-300 p-4 sm:p-8 flex flex-col items-center justify-center">
+
+  <div class="max-w-6xl w-full bg-white rounded-xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col h-[85vh]">
+    <!-- Mock Browser Header Bar -->
+    <div class="bg-slate-100 border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shrink-0">
+      <div class="flex items-center space-x-2">
+        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+        <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+      </div>
+      <div class="bg-white border border-slate-200 px-3 py-1 rounded-md text-xs font-mono text-slate-500 w-1/2 text-center shadow-inner truncate">
+        https://matcraft.app/dashboard
+      </div>
+      <div class="text-[10px] font-mono text-slate-400 uppercase tracking-widest hidden sm:block">
+        MatCraft v1.0 Preview
+      </div>
+    </div>
+
+    <!-- Live React Mount Point -->
+    <div id="root" class="flex-1 overflow-auto bg-slate-50"></div>
+  </div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
 
     // SVG Icons
     const Icons = {
-      Book: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>,
-      Plus: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>,
-      Edit: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>,
-      Timer: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
-      Alert: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>,
-      LogOut: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
-      Trash: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
-      Check: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>,
-      Play: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path></svg>,
-      Pause: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path></svg>,
-      Refresh: () => <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>,
-      ExternalLink: () => <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+      Book: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>,
+      Plus: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>,
+      Edit: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>,
+      Timer: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+      Alert: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>,
+      LogOut: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>,
+      Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>,
+      Play: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path></svg>,
+      Pause: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6"></path></svg>,
+      Refresh: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
     };
 
-    // Main App Component
     function App() {
-      const [user, setUser] = useState(null);
-      const [loading, setLoading] = useState(true);
       const [activeTab, setActiveTab] = useState('library');
-      const [plans, setPlans] = useState([]);
-      const [selectedPlanId, setSelectedPlanId] = useState(null);
+      const [plans, setPlans] = useState([createSamplePlan()]);
+      const [selectedPlanId, setSelectedPlanId] = useState('plan_default_13wk');
       const [selectedWeek, setSelectedWeek] = useState(1);
-      const [failures, setFailures] = useState([]);
-
-      // Auth Listener
-      useEffect(() => {
-        const interval = setInterval(() => {
-          if (window.firebaseAuth) {
-            clearInterval(interval);
-            window.firebaseSDK.onAuthStateChanged(window.firebaseAuth, (u) => {
-              setUser(u);
-              setLoading(false);
-              if (u) {
-                loadUserData(u.uid);
-              } else {
-                setPlans([]);
-                setFailures([]);
-                setSelectedPlanId(null);
-              }
-            });
-          }
-        }, 100);
-        return () => clearInterval(interval);
-      }, []);
-
-      const loadUserData = async (uid) => {
-        try {
-          // Fallback local storage for isolated users in client demo
-          const localPlans = localStorage.getItem(`matcraft_plans_${uid}`);
-          const localFailures = localStorage.getItem(`matcraft_failures_${uid}`);
-          
-          if (localPlans) {
-            const parsed = JSON.parse(localPlans);
-            setPlans(parsed);
-            if (parsed.length > 0 && !selectedPlanId) {
-              setSelectedPlanId(parsed[0].id);
-            }
-          } else {
-            // Seed 1 default sample curriculum
-            const sample = createSamplePlan();
-            setPlans([sample]);
-            setSelectedPlanId(sample.id);
-            localStorage.setItem(`matcraft_plans_${uid}`, JSON.stringify([sample]));
-          }
-
-          if (localFailures) {
-            setFailures(JSON.parse(localFailures));
-          }
-        } catch (err) {
-          console.error("Error loading user data:", err);
-        }
-      };
-
-      const savePlans = (newPlans) => {
-        setPlans(newPlans);
-        if (user) {
-          localStorage.setItem(`matcraft_plans_${user.uid}`, JSON.stringify(newPlans));
-        }
-      };
-
-      const saveFailures = (newFailures) => {
-        setFailures(newFailures);
-        if (user) {
-          localStorage.setItem(`matcraft_failures_${user.uid}`, JSON.stringify(newFailures));
-        }
-      };
-
-      const handleLogout = () => {
-        window.firebaseSDK.signOut(window.firebaseAuth);
-      };
-
-      if (loading) {
-        return (
-          <div class="h-full w-full flex items-center justify-center bg-slate-50">
-            <div class="text-center">
-              <div class="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p class="text-xs font-mono uppercase tracking-wider text-slate-500">Initializing Session...</p>
-            </div>
-          </div>
-        );
-      }
-
-      // STRICT AUTH GATE: Show Authentication Portal when logged out
-      if (!user) {
-        return <AuthPortal onAuthSuccess={(u) => setUser(u)} />;
-      }
+      const [failures, setFailures] = useState([
+        { id: 'f1', week: 1, note: 'Got flattened out when attempting elbow escape from mount', date: '2026-09-28' }
+      ]);
 
       const selectedPlan = plans.find(p => p.id === selectedPlanId) || plans[0];
 
       return (
-        <div class="min-h-full flex flex-col bg-slate-50">
-          <!-- Top Technical Header -->
-          <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div class="flex justify-between h-16 items-center">
-                
-                <!-- Brand -->
-                <div class="flex items-center space-x-3">
-                  <div class="w-8 h-8 bg-slate-900 text-white flex items-center justify-center font-extrabold tracking-tighter text-sm rounded">
-                    MC
-                  </div>
+        <div className="min-h-full flex flex-col bg-slate-50">
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16 items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-slate-900 text-white flex items-center justify-center font-extrabold tracking-tighter text-sm rounded">MC</div>
                   <div>
-                    <h1 class="text-sm font-bold tracking-tight text-slate-900 uppercase">MATCRAFT</h1>
-                    <p class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Curriculum & Session System</p>
+                    <h1 className="text-sm font-bold tracking-tight text-slate-900 uppercase">MATCRAFT</h1>
+                    <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Curriculum & Session System</p>
                   </div>
                 </div>
 
-                <!-- Navigation Tabs -->
-                <nav class="hidden md:flex space-x-1">
+                <nav className="flex space-x-1">
                   <TabButton id="library" label="Curriculum Library" icon={<Icons.Book />} activeTab={activeTab} setActiveTab={setActiveTab} badge={plans.length} />
-                  <TabButton id="wizard" label="New Curriculum Wizard" icon={<Icons.Plus />} activeTab={activeTab} setActiveTab={setActiveTab} />
-                  {selectedPlan && (
-                    <>
-                      <TabButton id="editor" label={`Edit: ${selectedPlan.title.substring(0, 18)}...`} icon={<Icons.Edit />} activeTab={activeTab} setActiveTab={setActiveTab} />
-                      <TabButton id="timer" label="Mat-Side Timer" icon={<Icons.Timer />} activeTab={activeTab} setActiveTab={setActiveTab} />
-                    </>
-                  )}
+                  <TabButton id="editor" label="Edit Plan" icon={<Icons.Edit />} activeTab={activeTab} setActiveTab={setActiveTab} />
+                  <TabButton id="timer" label="Mat-Side Timer" icon={<Icons.Timer />} activeTab={activeTab} setActiveTab={setActiveTab} />
                   <TabButton id="failures" label="Failure Log" icon={<Icons.Alert />} activeTab={activeTab} setActiveTab={setActiveTab} badge={failures.length} />
                 </nav>
 
-                <!-- User / Logout -->
-                <div class="flex items-center space-x-3">
-                  <span class="text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 hidden sm:inline-block">
-                    {user.email || 'Coach Guest'}
-                  </span>
-                  <button 
-                    onClick={handleLogout}
-                    class="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
-                    title="Sign Out Coach Account"
-                  >
-                    <Icons.LogOut />
-                  </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-mono text-slate-600 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">Coach Guest</span>
                 </div>
-              </div>
-
-              <!-- Mobile Nav Subbar -->
-              <div class="flex md:hidden border-t border-slate-100 py-2 overflow-x-auto space-x-1">
-                <TabButton id="library" label="Library" activeTab={activeTab} setActiveTab={setActiveTab} />
-                <TabButton id="wizard" label="+ New Plan" activeTab={activeTab} setActiveTab={setActiveTab} />
-                {selectedPlan && <TabButton id="editor" label="Edit Plan" activeTab={activeTab} setActiveTab={setActiveTab} />}
-                {selectedPlan && <TabButton id="timer" label="Timer" activeTab={activeTab} setActiveTab={setActiveTab} />}
-                <TabButton id="failures" label="Failures" activeTab={activeTab} setActiveTab={setActiveTab} />
               </div>
             </div>
           </header>
 
-          <!-- Main Content View -->
-          <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {activeTab === 'library' && (
-              <CurriculumLibrary 
-                plans={plans} 
-                onSelectPlan={(id) => { setSelectedPlanId(id); setActiveTab('editor'); }}
-                onStartTimer={(id) => { setSelectedPlanId(id); setActiveTab('timer'); }}
-                onDeletePlan={(id) => savePlans(plans.filter(p => p.id !== id))}
-                onCreateBlank={() => setActiveTab('wizard')}
-              />
+              <div className="space-y-6">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 tracking-tight">CURRICULUM LIBRARY</h2>
+                    <p className="text-xs text-slate-500 font-mono">Manage and execute structured training syllabi</p>
+                  </div>
+                  <button onClick={() => setActiveTab('editor')} className="inline-flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded hover:bg-slate-800">
+                    <Icons.Plus /> <span>New Curriculum</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {plans.map((plan) => (
+                    <div key={plan.id} className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col justify-between hover:border-slate-400 transition-all shadow-sm">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">{plan.style} · {plan.level}</span>
+                          <span className="text-[10px] font-mono text-slate-400">{plan.weeks?.length || 0} WEEKS</span>
+                        </div>
+                        <h3 className="text-base font-bold text-slate-900 leading-snug mb-1">{plan.title}</h3>
+                        <p className="text-xs text-slate-500 line-clamp-2 mb-4">{plan.description}</p>
+                      </div>
+                      <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-slate-400">ID: {plan.id}</span>
+                        <div className="flex items-center space-x-2">
+                          <button onClick={() => setActiveTab('editor')} className="px-3 py-1.5 border border-slate-300 text-slate-700 text-xs font-medium rounded hover:bg-slate-50">Edit</button>
+                          <button onClick={() => setActiveTab('timer')} className="px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded hover:bg-slate-800 flex items-center space-x-1">
+                            <Icons.Play /> <span>Start Session</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
-            {activeTab === 'wizard' && (
-              <PlanWizard onPlanCreated={(newPlan) => {
-                const updated = [newPlan, ...plans];
-                savePlans(updated);
-                setSelectedPlanId(newPlan.id);
-                setActiveTab('editor');
-              }} />
+            {activeTab === 'timer' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="bg-white border border-slate-200 rounded-lg p-6 text-center shadow-sm">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-xs font-mono uppercase tracking-wider text-slate-500">{selectedPlan.title} · WEEK {selectedWeek}</span>
+                      <span className="text-xs font-mono uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded">WARMUP PHASE</span>
+                    </div>
+                    <div className="text-6xl font-mono font-bold text-slate-900 tracking-tight my-6">10:00</div>
+                    <div className="flex items-center justify-center space-x-3 mb-6">
+                      <button className="px-6 py-2.5 bg-slate-900 text-white rounded font-medium text-xs uppercase tracking-wider flex items-center space-x-2">
+                        <Icons.Play /> <span>Start Timer</span>
+                      </button>
+                      <button className="p-2.5 border border-slate-300 text-slate-700 rounded hover:bg-slate-50"><Icons.Refresh /></button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
+                      <button className="py-2 text-xs font-mono rounded bg-slate-900 text-white">Warmup (10m)</button>
+                      <button className="py-2 text-xs font-mono rounded bg-slate-100 text-slate-800 hover:bg-slate-200">Technique (25m)</button>
+                      <button className="py-2 text-xs font-mono rounded bg-slate-100 text-slate-800 hover:bg-slate-200">Sparring (20m)</button>
+                    </div>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+                    <h3 className="text-sm font-bold text-slate-900 font-mono uppercase border-b border-slate-100 pb-2">ACTIVE LESSON PLAN: {selectedPlan.weeks[0].title}</h3>
+                    <div className="space-y-3 text-xs">
+                      <div><span className="font-mono text-slate-500 uppercase font-semibold">1. Warmup & Review:</span><p className="text-slate-800 mt-0.5">{selectedPlan.weeks[0].warmup}</p></div>
+                      <div><span className="font-mono text-slate-500 uppercase font-semibold">2. Technical Breakdown:</span><p className="text-slate-800 mt-0.5">{selectedPlan.weeks[0].technique}</p></div>
+                      <div><span className="font-mono text-slate-500 uppercase font-semibold">3. Positional Sparring Goal:</span><p className="text-slate-800 mt-0.5">{selectedPlan.weeks[0].sparring}</p></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+                  <h3 className="text-xs font-bold text-slate-900 font-mono uppercase mb-3 flex items-center space-x-1"><Icons.Alert /> <span>SPARRING FAILURE LOGGER</span></h3>
+                  <p className="text-xs text-slate-500 mb-4">Log immediate errors during live sparring to auto-integrate into next week's warmup.</p>
+                  <textarea rows="3" placeholder="e.g. Lost underhook during knee slice..." className="w-full px-3 py-2 border border-slate-300 rounded text-xs mb-3 focus:outline-none focus:ring-1 focus:ring-slate-900"></textarea>
+                  <button className="w-full py-2 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded hover:bg-slate-800">Log Sparring Mistake</button>
+                </div>
+              </div>
             )}
 
-            {activeTab === 'editor' && selectedPlan && (
-              <PlanEditor 
-                plan={selectedPlan} 
-                selectedWeek={selectedWeek}
-                setSelectedWeek={setSelectedWeek}
-                onUpdatePlan={(updatedPlan) => {
-                  savePlans(plans.map(p => p.id === updatedPlan.id ? updatedPlan : p));
-                }}
-              />
-            )}
-
-            {activeTab === 'timer' && selectedPlan && (
-              <MatTimer 
-                plan={selectedPlan} 
-                selectedWeek={selectedWeek}
-                setSelectedWeek={setSelectedWeek}
-                failures={failures}
-                onLogFailure={(fail) => saveFailures([fail, ...failures])}
-              />
+            {activeTab === 'editor' && (
+              <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-5">
+                <h3 className="text-sm font-bold text-slate-900 font-mono uppercase border-b border-slate-100 pb-3">CURRICULUM EDITOR — WEEK 1</h3>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-slate-700 mb-1">Session Title / Core Topic</label>
+                  <input type="text" defaultValue={selectedPlan.weeks[0].title} className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-700 mb-1">Warmup & Review (10 mins)</label>
+                    <textarea rows="4" defaultValue={selectedPlan.weeks[0].warmup} className="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-700 mb-1">Technical Breakdown (25 mins)</label>
+                    <textarea rows="4" defaultValue={selectedPlan.weeks[0].technique} className="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-700 mb-1">Positional Sparring (20 mins)</label>
+                    <textarea rows="4" defaultValue={selectedPlan.weeks[0].sparring} className="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"></textarea>
+                  </div>
+                </div>
+              </div>
             )}
 
             {activeTab === 'failures' && (
-              <FailureLogger 
-                failures={failures} 
-                onDeleteFailure={(id) => saveFailures(failures.filter(f => f.id !== id))}
-              />
+              <div className="space-y-4 max-w-4xl mx-auto">
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight border-b border-slate-200 pb-3">SPARRING FAILURE REPOSITORY</h2>
+                {failures.map(f => (
+                  <div key={f.id} className="bg-white border border-slate-200 rounded-lg p-4 flex justify-between items-center shadow-sm">
+                    <div>
+                      <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 mr-2">WEEK {f.week}</span>
+                      <span className="text-[10px] font-mono text-slate-400">{f.date}</span>
+                      <p className="text-xs text-slate-800 font-medium mt-1">{f.note}</p>
+                    </div>
+                    <button className="text-slate-400 hover:text-red-600"><Icons.Trash /></button>
+                  </div>
+                ))}
+              </div>
             )}
           </main>
         </div>
       );
     }
 
-    // Nav Button Component
     function TabButton({ id, label, icon, activeTab, setActiveTab, badge }) {
       const active = activeTab === id;
       return (
-        <button
-          onClick={() => setActiveTab(id)}
-          class={`flex items-center space-x-2 px-3 py-1.5 text-xs font-medium rounded transition-all ${
-            active 
-              ? 'bg-slate-900 text-white shadow-sm' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-          }`}
-        >
+        <button onClick={() => setActiveTab(id)} className={`flex items-center space-x-2 px-3 py-1.5 text-xs font-medium rounded transition-all ${active ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}`}>
           {icon && <span>{icon}</span>}
           <span>{label}</span>
-          {badge !== undefined && (
-            <span class={`ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono ${
-              active ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'
-            }`}>
-              {badge}
-            </span>
-          )}
+          {badge !== undefined && <span className={`ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono ${active ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>{badge}</span>}
         </button>
       );
     }
 
-    // STRICT AUTH PORTAL
-    function AuthPortal({ onAuthSuccess }) {
-      const [isSignUp, setIsSignUp] = useState(false);
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
-      const [error, setError] = useState('');
-      const [submitting, setSubmitting] = useState(false);
-
-      const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSubmitting(true);
-        try {
-          if (isSignUp) {
-            const res = await window.firebaseSDK.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-            onAuthSuccess(res.user);
-          } else {
-            const res = await window.firebaseSDK.signInWithEmailAndPassword(window.firebaseAuth, email, password);
-            onAuthSuccess(res.user);
-          }
-        } catch (err) {
-          setError(err.message.replace('Firebase: ', ''));
-        } finally {
-          setSubmitting(false);
-        }
-      };
-
-      const handleGuestLogin = async () => {
-        setSubmitting(true);
-        try {
-          const res = await window.firebaseSDK.signInAnonymously(window.firebaseAuth);
-          onAuthSuccess(res.user);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setSubmitting(false);
-        }
-      };
-
-      return (
-        <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-50">
-          <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-            <div class="w-12 h-12 bg-slate-900 text-white flex items-center justify-center font-black text-lg mx-auto rounded shadow-sm">
-              MC
-            </div>
-            <h2 class="mt-4 text-xl font-bold tracking-tight text-slate-900 uppercase">MATCRAFT PRO</h2>
-            <p class="mt-1 text-xs text-slate-500 font-mono">Structured Grappling & Private Session Manager</p>
-          </div>
-
-          <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="bg-white py-8 px-6 shadow-sm border border-slate-200 rounded-lg sm:px-10">
-              <div class="mb-6 border-b border-slate-100 pb-4">
-                <h3 class="text-sm font-semibold text-slate-900">
-                  {isSignUp ? 'Create Coach Account' : 'Coach Portal Authentication'}
-                </h3>
-                <p class="text-xs text-slate-500 mt-0.5">
-                  Sign in to access your gym's isolated curriculum plans.
-                </p>
-              </div>
-
-              {error && (
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded">
-                  {error}
-                </div>
-              )}
-
-              <form class="space-y-4" onSubmit={handleSubmit}>
-                <div>
-                  <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="coach@gym.com"
-                    class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  class="w-full py-2.5 px-4 bg-slate-900 text-white font-medium text-xs uppercase tracking-wider rounded hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50"
-                >
-                  {submitting ? 'Authenticating...' : (isSignUp ? 'Register Account' : 'Sign In to Workspace')}
-                </button>
-              </form>
-
-              <div class="mt-6 border-t border-slate-100 pt-4 flex items-center justify-between">
-                <button
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  class="text-xs text-slate-600 hover:text-slate-900 underline"
-                >
-                  {isSignUp ? 'Existing user? Sign in' : 'Need an account? Register'}
-                </button>
-
-                <button
-                  onClick={handleGuestLogin}
-                  class="text-xs font-mono text-slate-500 hover:text-slate-900"
-                >
-                  Demo Mode →
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Curriculum Library Component
-    function CurriculumLibrary({ plans, onSelectPlan, onStartTimer, onDeletePlan, onCreateBlank }) {
-      return (
-        <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 tracking-tight">CURRICULUM LIBRARY</h2>
-              <p class="text-xs text-slate-500 font-mono">Manage and execute structured training syllabi</p>
-            </div>
-            <button
-              onClick={onCreateBlank}
-              class="inline-flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded hover:bg-slate-800 transition-colors shadow-sm"
-            >
-              <Icons.Plus />
-              <span>New Curriculum</span>
-            </button>
-          </div>
-
-          {plans.length === 0 ? (
-            <div class="text-center py-16 bg-white rounded-lg border border-slate-200">
-              <p class="text-sm font-medium text-slate-900">No Curriculums Found</p>
-              <p class="text-xs text-slate-500 mt-1 mb-4">Get started by creating your first structured grappling plan.</p>
-              <button
-                onClick={onCreateBlank}
-                class="px-4 py-2 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded"
-              >
-                Create First Plan
-              </button>
-            </div>
-          ) : (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {plans.map((plan) => (
-                <div key={plan.id} class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col justify-between hover:border-slate-400 transition-all shadow-sm">
-                  <div>
-                    <div class="flex items-center justify-between mb-3">
-                      <span class="text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                        {plan.style} · {plan.level}
-                      </span>
-                      <span class="text-[10px] font-mono text-slate-400">
-                        {plan.weeks?.length || 0} WEEKS
-                      </span>
-                    </div>
-                    <h3 class="text-base font-bold text-slate-900 leading-snug mb-1">{plan.title}</h3>
-                    <p class="text-xs text-slate-500 line-clamp-2 mb-4">{plan.description}</p>
-                  </div>
-
-                  <div class="border-t border-slate-100 pt-4 flex items-center justify-between">
-                    <button
-                      onClick={() => onDeletePlan(plan.id)}
-                      class="text-slate-400 hover:text-red-600 p-1 transition-colors"
-                      title="Delete Plan"
-                    >
-                      <Icons.Trash />
-                    </button>
-                    
-                    <div class="flex items-center space-x-2">
-                      <button
-                        onClick={() => onSelectPlan(plan.id)}
-                        class="px-3 py-1.5 border border-slate-300 text-slate-700 text-xs font-medium rounded hover:bg-slate-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => onStartTimer(plan.id)}
-                        class="px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded hover:bg-slate-800 flex items-center space-x-1"
-                      >
-                        <Icons.Play />
-                        <span>Start Session</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // Plan Generator Wizard Component
-    function PlanWizard({ onPlanCreated }) {
-      const [title, setTitle] = useState('');
-      const [style, setStyle] = useState('NO-GI');
-      const [level, setLevel] = useState('BEGINNER');
-      const [focus, setFocus] = useState('ESCAPES & DEFENSE');
-      const [weekCount, setWeekCount] = useState(8);
-
-      const handleCreate = (e) => {
-        e.preventDefault();
-        const weeks = [];
-        for (let i = 1; i <= weekCount; i++) {
-          weeks.push({
-            week: i,
-            title: `Week ${i}: Focus Area ${i}`,
-            warmup: '5 Min Stance & Hand-Fighting / Review',
-            technique: `Core Technique Sequence ${i}`,
-            sparring: 'Positional Sparring from Target Control Point',
-            homeworkVideo: 'https://youtube.com',
-            homeworkNotes: 'Drill 3x per week during open mat'
-          });
-        }
-
-        const newPlan = {
-          id: 'plan_' + Date.now(),
-          title: title || `${style} ${level} Systems`,
-          style,
-          level,
-          focus,
-          description: `Structured ${weekCount}-week curriculum focusing on ${focus.toLowerCase()}.`,
-          created: new Date().toISOString().split('T')[0],
-          weeks
-        };
-
-        onPlanCreated(newPlan);
-      };
-
-      return (
-        <div class="max-w-2xl mx-auto bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-          <div class="border-b border-slate-200 pb-4 mb-6">
-            <h2 class="text-base font-bold text-slate-900 tracking-tight uppercase">NEW CURRICULUM WIZARD</h2>
-            <p class="text-xs text-slate-500 font-mono mt-0.5">Generate a structured multi-week training baseline</p>
-          </div>
-
-          <form onSubmit={handleCreate} class="space-y-5">
-            <div>
-              <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Curriculum Name</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. 12-Week No-Gi Guard Passing System"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Style</label>
-                <select 
-                  value={style} 
-                  onChange={(e) => setStyle(e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                >
-                  <option>NO-GI</option>
-                  <option>GI</option>
-                  <option>SUBMISSION WRESTLING</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Target Level</label>
-                <select 
-                  value={level} 
-                  onChange={(e) => setLevel(e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                >
-                  <option>BEGINNER</option>
-                  <option>INTERMEDIATE</option>
-                  <option>ADVANCED</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Primary Focus Area</label>
-                <select 
-                  value={focus} 
-                  onChange={(e) => setFocus(e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
-                >
-                  <option>ESCAPES & DEFENSE</option>
-                  <option>GUARD PASSING</option>
-                  <option>OPEN GUARD & SWEEPS</option>
-                  <option>TAKEDOWNS & CONTROL</option>
-                  <option>SUBMISSIONS & FINISHES</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Duration (Weeks)</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="52"
-                  value={weekCount}
-                  onChange={(e) => setWeekCount(parseInt(e.target.value))}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-            </div>
-
-            <div class="pt-4 border-t border-slate-100 flex justify-end">
-              <button
-                type="submit"
-                class="px-5 py-2.5 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded hover:bg-slate-800 transition-colors"
-              >
-                Generate Curriculum Baseline
-              </button>
-            </div>
-          </form>
-        </div>
-      );
-    }
-
-    // Plan Editor Component
-    function PlanEditor({ plan, selectedWeek, setSelectedWeek, onUpdatePlan }) {
-      const currentWeekData = plan.weeks?.find(w => w.week === selectedWeek) || plan.weeks[0];
-
-      const handleWeekChange = (field, value) => {
-        const updatedWeeks = plan.weeks.map(w => {
-          if (w.week === selectedWeek) {
-            return { ...w, [field]: value };
-          }
-          return w;
-        });
-        onUpdatePlan({ ...plan, weeks: updatedWeeks });
-      };
-
-      return (
-        <div class="space-y-6">
-          <div class="bg-white border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-            <div>
-              <div class="flex items-center space-x-2 mb-1">
-                <span class="text-[10px] font-mono uppercase bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                  {plan.style} · {plan.level}
-                </span>
-                <span class="text-xs font-mono text-slate-400">ID: {plan.id}</span>
-              </div>
-              <h2 class="text-lg font-bold text-slate-900">{plan.title}</h2>
-            </div>
-
-            <!-- Week Selector Tabs -->
-            <div class="flex overflow-x-auto space-x-1 pb-1 md:pb-0">
-              {plan.weeks.map((w) => (
-                <button
-                  key={w.week}
-                  onClick={() => setSelectedWeek(w.week)}
-                  class={`px-3 py-1.5 text-xs font-mono rounded transition-all ${
-                    selectedWeek === w.week 
-                      ? 'bg-slate-900 text-white font-bold' 
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  W{w.week}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <!-- Week Detailed Editor -->
-          <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-5">
-            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
-              <h3 class="text-sm font-bold text-slate-900 font-mono uppercase">WEEK {selectedWeek} SESSION CONTENT</h3>
-            </div>
-
-            <div>
-              <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Session Title / Core Topic</label>
-              <input
-                type="text"
-                value={currentWeekData.title}
-                onChange={(e) => handleWeekChange('title', e.target.value)}
-                class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Warmup & Review (10 mins)</label>
-                <textarea
-                  rows="3"
-                  value={currentWeekData.warmup}
-                  onChange={(e) => handleWeekChange('warmup', e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Technical Breakdown (25 mins)</label>
-                <textarea
-                  rows="3"
-                  value={currentWeekData.technique}
-                  onChange={(e) => handleWeekChange('technique', e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Positional Sparring (20 mins)</label>
-                <textarea
-                  rows="3"
-                  value={currentWeekData.sparring}
-                  onChange={(e) => handleWeekChange('sparring', e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-            </div>
-
-            <div class="border-t border-slate-100 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Homework Video URL</label>
-                <input
-                  type="text"
-                  value={currentWeekData.homeworkVideo || ''}
-                  onChange={(e) => handleWeekChange('homeworkVideo', e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-
-              <div>
-                <label class="block text-xs font-mono uppercase text-slate-700 mb-1">Homework Notes / Directives</label>
-                <input
-                  type="text"
-                  value={currentWeekData.homeworkNotes || ''}
-                  onChange={(e) => handleWeekChange('homeworkNotes', e.target.value)}
-                  placeholder="e.g. Watch 1st 5 mins before next private"
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Mat-Side Timer Component
-    function MatTimer({ plan, selectedWeek, setSelectedWeek, failures, onLogFailure }) {
-      const currentWeekData = plan.weeks?.find(w => w.week === selectedWeek) || plan.weeks[0];
-      
-      const [secondsLeft, setSecondsLeft] = useState(600); // 10 min default
-      const [isRunning, setIsRunning] = useState(false);
-      const [currentPhase, setCurrentPhase] = useState('Warmup');
-      const [newFailNote, setNewFailNote] = useState('');
-
-      useEffect(() => {
-        let interval = null;
-        if (isRunning && secondsLeft > 0) {
-          interval = setInterval(() => setSecondsLeft(s => s - 1), 1000);
-        } else if (secondsLeft === 0) {
-          setIsRunning(false);
-        }
-        return () => clearInterval(interval);
-      }, [isRunning, secondsLeft]);
-
-      const formatTime = (secs) => {
-        const m = Math.floor(secs / 60);
-        const s = secs % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      };
-
-      const setTimerPhase = (name, mins) => {
-        setCurrentPhase(name);
-        setSecondsLeft(mins * 60);
-        setIsRunning(false);
-      };
-
-      const handleAddFailure = (e) => {
-        e.preventDefault();
-        if (!newFailNote) return;
-        
-        onLogFailure({
-          id: 'fail_' + Date.now(),
-          week: selectedWeek,
-          note: newFailNote,
-          date: new Date().toISOString().split('T')[0]
-        });
-        setNewFailNote('');
-      };
-
-      return (
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- Timer Column -->
-          <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white border border-slate-200 rounded-lg p-6 text-center shadow-sm">
-              <div class="flex justify-between items-center mb-4">
-                <span class="text-xs font-mono uppercase tracking-wider text-slate-500">
-                  {plan.title} · WEEK {selectedWeek}
-                </span>
-                <span class="text-xs font-mono uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded">
-                  {currentPhase} PHASE
-                </span>
-              </div>
-
-              <!-- Digital Clock Display -->
-              <div class="text-6xl sm:text-7xl font-mono font-bold text-slate-900 tracking-tight my-6">
-                {formatTime(secondsLeft)}
-              </div>
-
-              <!-- Controls -->
-              <div class="flex items-center justify-center space-x-3 mb-6">
-                <button
-                  onClick={() => setIsRunning(!isRunning)}
-                  class={`px-6 py-2.5 rounded font-medium text-xs uppercase tracking-wider flex items-center space-x-2 transition-colors ${
-                    isRunning ? 'bg-amber-600 text-white hover:bg-amber-700' : 'bg-slate-900 text-white hover:bg-slate-800'
-                  }`}
-                >
-                  {isRunning ? <Icons.Pause /> : <Icons.Play />}
-                  <span>{isRunning ? 'Pause' : 'Start Timer'}</span>
-                </button>
-
-                <button
-                  onClick={() => setSecondsLeft(600)}
-                  class="p-2.5 border border-slate-300 text-slate-700 rounded hover:bg-slate-50"
-                  title="Reset Phase"
-                >
-                  <Icons.Refresh />
-                </button>
-              </div>
-
-              <!-- Phase Selector Buttons -->
-              <div class="grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
-                <button 
-                  onClick={() => setTimerPhase('Warmup', 10)}
-                  class="py-2 text-xs font-mono rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
-                >
-                  Warmup (10m)
-                </button>
-                <button 
-                  onClick={() => setTimerPhase('Technique', 25)}
-                  class="py-2 text-xs font-mono rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
-                >
-                  Technique (25m)
-                </button>
-                <button 
-                  onClick={() => setTimerPhase('Sparring', 20)}
-                  class="py-2 text-xs font-mono rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
-                >
-                  Sparring (20m)
-                </button>
-              </div>
-            </div>
-
-            <!-- Current Session Plan View -->
-            <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
-              <h3 class="text-sm font-bold text-slate-900 font-mono uppercase border-b border-slate-100 pb-2">
-                ACTIVE LESSON PLAN: {currentWeekData.title}
-              </h3>
-
-              <div class="space-y-3 text-xs">
-                <div>
-                  <span class="font-mono text-slate-500 uppercase font-semibold">1. Warmup & Review:</span>
-                  <p class="text-slate-800 mt-0.5">{currentWeekData.warmup}</p>
-                </div>
-                <div>
-                  <span class="font-mono text-slate-500 uppercase font-semibold">2. Technique Breakdown:</span>
-                  <p class="text-slate-800 mt-0.5">{currentWeekData.technique}</p>
-                </div>
-                <div>
-                  <span class="font-mono text-slate-500 uppercase font-semibold">3. Positional Sparring Goal:</span>
-                  <p class="text-slate-800 mt-0.5">{currentWeekData.sparring}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sparring Failures Logger Sidebar -->
-          <div class="space-y-6">
-            <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
-              <h3 class="text-xs font-bold text-slate-900 font-mono uppercase mb-3 flex items-center space-x-1">
-                <Icons.Alert />
-                <span>SPARRING FAILURE LOGGER</span>
-              </h3>
-              <p class="text-xs text-slate-500 mb-4">Log immediate errors during live sparring to auto-integrate into next week's warmup.</p>
-
-              <form onSubmit={handleAddFailure} class="space-y-3">
-                <textarea
-                  rows="3"
-                  placeholder="e.g. Got flattened out when attempting elbow escape from mount..."
-                  value={newFailNote}
-                  onChange={(e) => setNewFailNote(e.target.value)}
-                  class="w-full px-3 py-2 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-                <button
-                  type="submit"
-                  class="w-full py-2 bg-slate-900 text-white text-xs font-medium uppercase tracking-wider rounded hover:bg-slate-800"
-                >
-                  Log Sparring Mistake
-                </button>
-              </form>
-            </div>
-          </div>
-
-        </div>
-      );
-    }
-
-    // Failure Log Component
-    function FailureLogger({ failures, onDeleteFailure }) {
-      return (
-        <div class="space-y-6 max-w-4xl mx-auto">
-          <div class="border-b border-slate-200 pb-4">
-            <h2 class="text-lg font-bold text-slate-900 tracking-tight">SPARRING FAILURE REPOSITORY</h2>
-            <p class="text-xs text-slate-500 font-mono">Logged tactical issues earmarked for warmup troubleshooting</p>
-          </div>
-
-          {failures.length === 0 ? (
-            <div class="bg-white border border-slate-200 rounded-lg p-8 text-center">
-              <p class="text-xs font-mono text-slate-500">NO FAILURE LOGS RECORDED YET</p>
-            </div>
-          ) : (
-            <div class="space-y-3">
-              {failures.map((f) => (
-                <div key={f.id} class="bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
-                  <div>
-                    <div class="flex items-center space-x-2 mb-1">
-                      <span class="text-[10px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                        WEEK {f.week}
-                      </span>
-                      <span class="text-[10px] font-mono text-slate-400">{f.date}</span>
-                    </div>
-                    <p class="text-xs text-slate-800 font-medium">{f.note}</p>
-                  </div>
-
-                  <button
-                    onClick={() => onDeleteFailure(f.id)}
-                    class="text-slate-400 hover:text-red-600 p-1"
-                    title="Clear Log"
-                  >
-                    <Icons.Trash />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // Default Starter Curriculum
     function createSamplePlan() {
       return {
         id: 'plan_default_13wk',
         title: '13-Week No-Gi Fundamental Escapes & Systems',
         style: 'NO-GI',
         level: 'BEGINNER',
-        focus: 'ESCAPES & DEFENSE',
         description: 'Comprehensive 1-on-1 private lesson roadmap focused on position before submission, escape priority, and hand-fighting fundamentals.',
-        created: new Date().toISOString().split('T')[0],
-        weeks: [
-          {
-            week: 1,
-            title: 'Side Control Escapes: Frame & Elbow Push',
-            warmup: '3m Stance & Snapdown drills + 7m Review',
-            technique: 'Building frames from bottom side control, hip escape to Guard, Underhook recovery',
-            sparring: 'Top attempts to hold side control; Bottom attempts guard recovery or underhook standup',
-            homeworkVideo: 'https://youtube.com',
-            homeworkNotes: 'Watch framing concepts video'
-          },
-          {
-            week: 2,
-            title: 'Mount Escapes: Upa Bridge & Knee-Elbow Escape',
-            warmup: '5m Side control escape review + 5m stance drill',
-            technique: 'Trapping arm/leg for bridge escape; Frame hip for knee-elbow guard recovery',
-            sparring: 'Top starts in full mount; Bottom works to escape to half/full guard',
-            homeworkVideo: 'https://youtube.com',
-            homeworkNotes: 'Practice hip flexibility drills'
-          }
-        ]
+        weeks: [{
+          week: 1,
+          title: 'Side Control Escapes: Frame & Elbow Push',
+          warmup: '3m Stance & Snapdown drills + 7m Review',
+          technique: 'Building frames from bottom side control, hip escape to Guard, Underhook recovery',
+          sparring: 'Top attempts to hold side control; Bottom attempts guard recovery or underhook standup'
+        }]
       };
     }
 
