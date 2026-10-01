@@ -1,67 +1,60 @@
 import { db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  getDocs, 
+  doc, 
+  serverTimestamp 
+} from 'firebase/firestore';
 
-const STORAGE_KEY = 'matflow_timetable_data';
+// Collection reference
+const getTimetableRef = (userId) => collection(db, 'users', userId, 'timetable');
 
-export const getTimetableData = async (userId = 'guest') => {
-  try {
-    if (!userId || userId === 'guest') {
-      const localData = localStorage.getItem(STORAGE_KEY);
-      return localData ? JSON.parse(localData) : {};
-    }
-    const docRef = doc(db, 'timetables', userId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return docSnap.data();
-    }
-    return {};
-  } catch (error) {
-    console.error('Error fetching timetable:', error);
-    const localData = localStorage.getItem(STORAGE_KEY);
-    return localData ? JSON.parse(localData) : {};
+// Fetch all scheduled classes
+export async function getTimetableClasses(userId) {
+  if (!userId || userId === 'guest-user') {
+    // Return sample demo schedule for guest mode
+    return [
+      { id: 't1', discipline: 'BJJ (Gi)', dayOfWeek: 'Tuesday', time: '12:00 PM', activePlanId: null },
+      { id: 't2', discipline: 'No-Gi Grappling', dayOfWeek: 'Tuesday', time: '6:30 PM', activePlanId: null },
+      { id: 't3', discipline: 'MMA', dayOfWeek: 'Wednesday', time: '6:00 PM', activePlanId: null },
+      { id: 't4', discipline: 'Kickboxing', dayOfWeek: 'Thursday', time: '7:00 PM', activePlanId: null },
+      { id: 't5', discipline: 'Junior BJJ', dayOfWeek: 'Saturday', time: '10:00 AM', activePlanId: null }
+    ];
   }
-};
 
-export const saveProgrammeToSlot = async (slotKey, programmeData, userId = 'guest') => {
-  try {
-    const currentData = await getTimetableData(userId);
-    const updatedData = { ...currentData, [slotKey]: programmeData };
+  const snapshot = await getDocs(getTimetableRef(userId));
+  return snapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data()
+  }));
+}
 
-    if (!userId || userId === 'guest') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-      return updatedData;
-    }
-
-    const docRef = doc(db, 'timetables', userId);
-    await setDoc(docRef, updatedData, { merge: true });
-    return updatedData;
-  } catch (error) {
-    console.error('Error saving slot programme:', error);
-    const currentData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    currentData[slotKey] = programmeData;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-    return currentData;
+// Add a new recurring class
+export async function createTimetableClass(userId, classData) {
+  if (!userId || userId === 'guest-user') {
+    return 'guest-class-' + Date.now();
   }
-};
 
-export const removeProgrammeFromSlot = async (slotKey, userId = 'guest') => {
-  try {
-    const currentData = await getTimetableData(userId);
-    delete currentData[slotKey];
+  const docRef = await addDoc(getTimetableRef(userId), {
+    ...classData,
+    createdAt: serverTimestamp()
+  });
+  return docRef.id;
+}
 
-    if (!userId || userId === 'guest') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-      return currentData;
-    }
+// Update class details or assign a curriculum plan to a class
+export async function updateTimetableClass(userId, classId, updatedData) {
+  if (!userId || userId === 'guest-user') return;
+  const classRef = doc(db, 'users', userId, 'timetable', classId);
+  await updateDoc(classRef, updatedData);
+}
 
-    const docRef = doc(db, 'timetables', userId);
-    await setDoc(docRef, currentData);
-    return currentData;
-  } catch (error) {
-    console.error('Error removing slot programme:', error);
-    const currentData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    delete currentData[slotKey];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
-    return currentData;
-  }
-};
+// Delete a class
+export async function deleteTimetableClass(userId, classId) {
+  if (!userId || userId === 'guest-user') return;
+  const classRef = doc(db, 'users', userId, 'timetable', classId);
+  await deleteDoc(classRef);
+}
