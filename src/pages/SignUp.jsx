@@ -2,6 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+function friendlyError(err) {
+  const text = `${err?.code || ''} ${err?.message || ''}`;
+  if (text.includes('email-already-in-use')) return 'An account with this email already exists. Try signing in instead.';
+  if (text.includes('invalid-email')) return 'That email address does not look right.';
+  if (text.includes('weak-password')) return 'Password is too weak. Use at least 6 characters.';
+  if (text.includes('api-key')) return 'Sign-up is not set up yet. Please try again later or use the guest demo.';
+  if (text.includes('network')) return 'Network problem. Check your connection and try again.';
+  return 'Failed to create an account. Please try again.';
+}
+
 export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,59 +34,66 @@ export default function SignUp() {
       await signup(email, password);
       navigate('/');
     } catch (err) {
-      setError('Failed to create an account. ' + err.message);
+      console.error('Sign-up error:', err);
+      setError(friendlyError(err));
     } finally {
       setLoading(false);
     }
   }
 
+  const inputClass =
+    'w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm';
+  const labelClass = 'block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1';
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-700">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-red-500">MatCraft</h1>
-          <p className="text-gray-400 mt-2">Create your coach account</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            MatFlow
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">Create your coach account</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/50 border border-red-500 text-red-200 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email address</label>
+            <label className={labelClass}>Email address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className={inputClass}
               placeholder="coach@gym.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label className={labelClass}>Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className={inputClass}
               placeholder="••••••••"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Confirm password</label>
+            <label className={labelClass}>Confirm password</label>
             <input
               type="password"
               required
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className={inputClass}
               placeholder="••••••••"
             />
           </div>
@@ -84,15 +101,15 @@ export default function SignUp() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-red-600 hover:bg-red-700 font-semibold rounded-lg text-white transition duration-200 disabled:opacity-50 mt-2"
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 font-medium rounded-xl text-white transition shadow-sm disabled:opacity-50 text-sm mt-2"
           >
             {loading ? 'Creating account...' : 'Sign up'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-slate-500 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-red-400 hover:text-red-300 font-medium">
+          <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
             Sign in
           </Link>
         </p>
